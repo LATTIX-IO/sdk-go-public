@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Check formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Run tests
+        run: |
+          go test ./...
+          go vet ./...
+          go build ./...
+
+  native-bindings:
+    name: Native bindings (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    steps:
+      - name: Checkout sdk-go
+        uses: actions/checkout@v4
+
+      - name: Checkout sdk-rust public mirror
+        uses: actions/checkout@v4
+        with:
+          repository: LATTIX-IO/sdk-rust-public
+          path: sdk-rust
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust native library
+        working-directory: sdk-rust
+        run: cargo build --release
+
+      - name: Run rustbindings tests (Windows)
+        if: runner.os == 'Windows'
+        env:
+          LATTIX_SDK_RUST_LIB: ${{ github.workspace }}\sdk-rust\target\release\sdk_rust.dll
+        run: |
+          go test -tags rustbindings ./...
+          go build -tags rustbindings ./...
+
+      - name: Run rustbindings tests (Unix)
+        if: runner.os != 'Windows'
+        env:
+          CGO_CFLAGS: -I${{ github.workspace }}/sdk-rust/include
+          CGO_LDFLAGS: -L${{ github.workspace }}/sdk-rust/target/release
+          LD_LIBRARY_PATH: ${{ github.workspace }}/sdk-rust/target/release
+          DYLD_LIBRARY_PATH: ${{ github.workspace }}/sdk-rust/target/release
+        run: |
+          go test -tags rustbindings ./...
+          go build -tags rustbindings ./...

@@ -1,0 +1,48 @@
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+  categories:
+    - title: SDK surface
+      labels:
+        - sdk-surface
+        - api
+    - title: Native binding updates
+      labels:
+        - bindings
+        - rustbindings
+        - native-assets
+    - title: Tooling and quality
+      labels:
+        - tooling
+        - ci
+        - security
+        - docs
+
+template: |
+  ## Release summary
+
+  - Go module version: <!-- replace with tag/version -->
+  - Matching `sdk-rust` release: <!-- required -->
+  - Supported native install story: installer-backed native bootstrap
+
+  ## Native pairing checklist
+
+  - [ ] Link the matching `sdk-rust` release
+  - [ ] Attach `install-native.ps1`
+  - [ ] Attach `install-native.sh`
+  - [ ] Confirm installer output still matches native asset names and locations
+  - [ ] Call out any ABI or install-path changes
+
+  ## Highlights
+
+  $CHANGES
+
+  ## Consumer upgrade notes
+
+  - Confirm whether the matching `sdk-rust` version is mandatory.
+  - Confirm whether the installer or native header/library install steps changed.
+
+  ## Contributors
+
+  $CONTRIBUTORS
