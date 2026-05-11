@@ -48,10 +48,32 @@ func (b *ffiBinding) Call(method string, payload []byte) ([]byte, error) {
 		return b.callNoPayload(sdkWhoAmI)
 	case "bootstrap":
 		return b.callNoPayload(sdkBootstrap)
-	case "exchange_session":
-		return b.callNoPayload(sdkExchangeSession)
+	case "prepare_local_protection":
+		return b.callWithPayload(sdkPrepareLocalProtection, payload)
+	case "generate_cid_binding":
+		return b.callWithPayload(sdkGenerateCIDBinding, payload)
+	case "sign_bytes_with_detached_signature":
+		return b.callWithPayload(sdkSignBytesWithDetachedSignature, payload)
+	case "verify_bytes_with_detached_signature":
+		return b.callWithPayload(sdkVerifyBytesWithDetachedSignature, payload)
 	case "protection_plan":
 		return b.callWithPayload(sdkProtectionPlan, payload)
+	case "protect_bytes_with_tdf":
+		return b.callWithPayload(sdkProtectBytesWithTDF, payload)
+	case "access_bytes_with_tdf":
+		return b.callWithPayload(sdkAccessBytesWithTDF, payload)
+	case "rewrap_bytes_with_tdf":
+		return b.callWithPayload(sdkRewrapBytesWithTDF, payload)
+	case "set_tdf_attributes":
+		return b.callWithPayload(sdkSetTDFAttributes, payload)
+	case "edit_tdf_attributes":
+		return b.callWithPayload(sdkEditTDFAttributes, payload)
+	case "protect_bytes_with_envelope":
+		return b.callWithPayload(sdkProtectBytesWithEnvelope, payload)
+	case "access_bytes_with_envelope":
+		return b.callWithPayload(sdkAccessBytesWithEnvelope, payload)
+	case "rewrap_bytes_with_envelope":
+		return b.callWithPayload(sdkRewrapBytesWithEnvelope, payload)
 	case "policy_resolve":
 		return b.callWithPayload(sdkPolicyResolve, payload)
 	case "key_access_plan":
@@ -89,12 +111,56 @@ func sdkBootstrap(handle *C.ClientHandle) *C.char {
 	return C.lattix_sdk_bootstrap(handle)
 }
 
-func sdkExchangeSession(handle *C.ClientHandle) *C.char {
-	return C.lattix_sdk_exchange_session(handle)
+func sdkPrepareLocalProtection(handle *C.ClientHandle, payload *C.char) *C.char {
+	return C.lattix_sdk_prepare_local_protection(handle, payload)
+}
+
+func sdkGenerateCIDBinding(handle *C.ClientHandle, payload *C.char) *C.char {
+	return C.lattix_sdk_generate_cid_binding(handle, payload)
+}
+
+func sdkSignBytesWithDetachedSignature(handle *C.ClientHandle, payload *C.char) *C.char {
+	return C.lattix_sdk_sign_bytes_with_detached_signature(handle, payload)
+}
+
+func sdkVerifyBytesWithDetachedSignature(handle *C.ClientHandle, payload *C.char) *C.char {
+	return C.lattix_sdk_verify_bytes_with_detached_signature(handle, payload)
 }
 
 func sdkProtectionPlan(handle *C.ClientHandle, payload *C.char) *C.char {
 	return C.lattix_sdk_protection_plan(handle, payload)
+}
+
+func sdkProtectBytesWithTDF(handle *C.ClientHandle, payload *C.char) *C.char {
+	return C.lattix_sdk_protect_bytes_with_tdf(handle, payload)
+}
+
+func sdkAccessBytesWithTDF(handle *C.ClientHandle, payload *C.char) *C.char {
+	return C.lattix_sdk_access_bytes_with_tdf(handle, payload)
+}
+
+func sdkRewrapBytesWithTDF(handle *C.ClientHandle, payload *C.char) *C.char {
+	return C.lattix_sdk_rewrap_bytes_with_tdf(handle, payload)
+}
+
+func sdkSetTDFAttributes(handle *C.ClientHandle, payload *C.char) *C.char {
+	return C.lattix_sdk_set_tdf_attributes(handle, payload)
+}
+
+func sdkEditTDFAttributes(handle *C.ClientHandle, payload *C.char) *C.char {
+	return C.lattix_sdk_edit_tdf_attributes(handle, payload)
+}
+
+func sdkProtectBytesWithEnvelope(handle *C.ClientHandle, payload *C.char) *C.char {
+	return C.lattix_sdk_protect_bytes_with_envelope(handle, payload)
+}
+
+func sdkAccessBytesWithEnvelope(handle *C.ClientHandle, payload *C.char) *C.char {
+	return C.lattix_sdk_access_bytes_with_envelope(handle, payload)
+}
+
+func sdkRewrapBytesWithEnvelope(handle *C.ClientHandle, payload *C.char) *C.char {
+	return C.lattix_sdk_rewrap_bytes_with_envelope(handle, payload)
 }
 
 func sdkPolicyResolve(handle *C.ClientHandle, payload *C.char) *C.char {

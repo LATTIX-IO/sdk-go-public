@@ -20,20 +20,31 @@ type windowsBinding struct {
 }
 
 type windowsRustLibrary struct {
-	dll                  *syscall.LazyDLL
-	lastErrorMessageProc *syscall.LazyProc
-	stringFreeProc       *syscall.LazyProc
-	clientNewProc        *syscall.LazyProc
-	clientFreeProc       *syscall.LazyProc
-	capabilitiesProc     *syscall.LazyProc
-	whoAmIProc           *syscall.LazyProc
-	bootstrapProc        *syscall.LazyProc
-	exchangeSessionProc  *syscall.LazyProc
-	protectionPlanProc   *syscall.LazyProc
-	policyResolveProc    *syscall.LazyProc
-	keyAccessPlanProc    *syscall.LazyProc
-	artifactRegisterProc *syscall.LazyProc
-	evidenceProc         *syscall.LazyProc
+	dll                                  *syscall.LazyDLL
+	lastErrorMessageProc                 *syscall.LazyProc
+	stringFreeProc                       *syscall.LazyProc
+	clientNewProc                        *syscall.LazyProc
+	clientFreeProc                       *syscall.LazyProc
+	capabilitiesProc                     *syscall.LazyProc
+	whoAmIProc                           *syscall.LazyProc
+	bootstrapProc                        *syscall.LazyProc
+	prepareLocalProtectionProc           *syscall.LazyProc
+	generateCIDBindingProc               *syscall.LazyProc
+	signBytesWithDetachedSignatureProc   *syscall.LazyProc
+	verifyBytesWithDetachedSignatureProc *syscall.LazyProc
+	protectionPlanProc                   *syscall.LazyProc
+	protectBytesWithTDFProc              *syscall.LazyProc
+	accessBytesWithTDFProc               *syscall.LazyProc
+	rewrapBytesWithTDFProc               *syscall.LazyProc
+	setTDFAttributesProc                 *syscall.LazyProc
+	editTDFAttributesProc                *syscall.LazyProc
+	protectBytesWithEnvelopeProc         *syscall.LazyProc
+	accessBytesWithEnvelopeProc          *syscall.LazyProc
+	rewrapBytesWithEnvelopeProc          *syscall.LazyProc
+	policyResolveProc                    *syscall.LazyProc
+	keyAccessPlanProc                    *syscall.LazyProc
+	artifactRegisterProc                 *syscall.LazyProc
+	evidenceProc                         *syscall.LazyProc
 }
 
 var (
@@ -73,10 +84,32 @@ func (b *windowsBinding) Call(method string, payload []byte) ([]byte, error) {
 		return b.callNoPayload(b.lib.whoAmIProc)
 	case "bootstrap":
 		return b.callNoPayload(b.lib.bootstrapProc)
-	case "exchange_session":
-		return b.callNoPayload(b.lib.exchangeSessionProc)
+	case "prepare_local_protection":
+		return b.callWithPayload(b.lib.prepareLocalProtectionProc, payload)
+	case "generate_cid_binding":
+		return b.callWithPayload(b.lib.generateCIDBindingProc, payload)
+	case "sign_bytes_with_detached_signature":
+		return b.callWithPayload(b.lib.signBytesWithDetachedSignatureProc, payload)
+	case "verify_bytes_with_detached_signature":
+		return b.callWithPayload(b.lib.verifyBytesWithDetachedSignatureProc, payload)
 	case "protection_plan":
 		return b.callWithPayload(b.lib.protectionPlanProc, payload)
+	case "protect_bytes_with_tdf":
+		return b.callWithPayload(b.lib.protectBytesWithTDFProc, payload)
+	case "access_bytes_with_tdf":
+		return b.callWithPayload(b.lib.accessBytesWithTDFProc, payload)
+	case "rewrap_bytes_with_tdf":
+		return b.callWithPayload(b.lib.rewrapBytesWithTDFProc, payload)
+	case "set_tdf_attributes":
+		return b.callWithPayload(b.lib.setTDFAttributesProc, payload)
+	case "edit_tdf_attributes":
+		return b.callWithPayload(b.lib.editTDFAttributesProc, payload)
+	case "protect_bytes_with_envelope":
+		return b.callWithPayload(b.lib.protectBytesWithEnvelopeProc, payload)
+	case "access_bytes_with_envelope":
+		return b.callWithPayload(b.lib.accessBytesWithEnvelopeProc, payload)
+	case "rewrap_bytes_with_envelope":
+		return b.callWithPayload(b.lib.rewrapBytesWithEnvelopeProc, payload)
 	case "policy_resolve":
 		return b.callWithPayload(b.lib.policyResolveProc, payload)
 	case "key_access_plan":
@@ -118,20 +151,31 @@ func loadWindowsRustLibrary() (*windowsRustLibrary, error) {
 
 		dll := syscall.NewLazyDLL(libraryPath)
 		lib := &windowsRustLibrary{
-			dll:                  dll,
-			lastErrorMessageProc: dll.NewProc("lattix_sdk_last_error_message"),
-			stringFreeProc:       dll.NewProc("lattix_sdk_string_free"),
-			clientNewProc:        dll.NewProc("lattix_sdk_client_new"),
-			clientFreeProc:       dll.NewProc("lattix_sdk_client_free"),
-			capabilitiesProc:     dll.NewProc("lattix_sdk_capabilities"),
-			whoAmIProc:           dll.NewProc("lattix_sdk_whoami"),
-			bootstrapProc:        dll.NewProc("lattix_sdk_bootstrap"),
-			exchangeSessionProc:  dll.NewProc("lattix_sdk_exchange_session"),
-			protectionPlanProc:   dll.NewProc("lattix_sdk_protection_plan"),
-			policyResolveProc:    dll.NewProc("lattix_sdk_policy_resolve"),
-			keyAccessPlanProc:    dll.NewProc("lattix_sdk_key_access_plan"),
-			artifactRegisterProc: dll.NewProc("lattix_sdk_artifact_register"),
-			evidenceProc:         dll.NewProc("lattix_sdk_evidence"),
+			dll:                                  dll,
+			lastErrorMessageProc:                 dll.NewProc("lattix_sdk_last_error_message"),
+			stringFreeProc:                       dll.NewProc("lattix_sdk_string_free"),
+			clientNewProc:                        dll.NewProc("lattix_sdk_client_new"),
+			clientFreeProc:                       dll.NewProc("lattix_sdk_client_free"),
+			capabilitiesProc:                     dll.NewProc("lattix_sdk_capabilities"),
+			whoAmIProc:                           dll.NewProc("lattix_sdk_whoami"),
+			bootstrapProc:                        dll.NewProc("lattix_sdk_bootstrap"),
+			prepareLocalProtectionProc:           dll.NewProc("lattix_sdk_prepare_local_protection"),
+			generateCIDBindingProc:               dll.NewProc("lattix_sdk_generate_cid_binding"),
+			signBytesWithDetachedSignatureProc:   dll.NewProc("lattix_sdk_sign_bytes_with_detached_signature"),
+			verifyBytesWithDetachedSignatureProc: dll.NewProc("lattix_sdk_verify_bytes_with_detached_signature"),
+			protectionPlanProc:                   dll.NewProc("lattix_sdk_protection_plan"),
+			protectBytesWithTDFProc:              dll.NewProc("lattix_sdk_protect_bytes_with_tdf"),
+			accessBytesWithTDFProc:               dll.NewProc("lattix_sdk_access_bytes_with_tdf"),
+			rewrapBytesWithTDFProc:               dll.NewProc("lattix_sdk_rewrap_bytes_with_tdf"),
+			setTDFAttributesProc:                 dll.NewProc("lattix_sdk_set_tdf_attributes"),
+			editTDFAttributesProc:                dll.NewProc("lattix_sdk_edit_tdf_attributes"),
+			protectBytesWithEnvelopeProc:         dll.NewProc("lattix_sdk_protect_bytes_with_envelope"),
+			accessBytesWithEnvelopeProc:          dll.NewProc("lattix_sdk_access_bytes_with_envelope"),
+			rewrapBytesWithEnvelopeProc:          dll.NewProc("lattix_sdk_rewrap_bytes_with_envelope"),
+			policyResolveProc:                    dll.NewProc("lattix_sdk_policy_resolve"),
+			keyAccessPlanProc:                    dll.NewProc("lattix_sdk_key_access_plan"),
+			artifactRegisterProc:                 dll.NewProc("lattix_sdk_artifact_register"),
+			evidenceProc:                         dll.NewProc("lattix_sdk_evidence"),
 		}
 
 		if err := lib.dll.Load(); err != nil {
@@ -147,8 +191,19 @@ func loadWindowsRustLibrary() (*windowsRustLibrary, error) {
 			lib.capabilitiesProc,
 			lib.whoAmIProc,
 			lib.bootstrapProc,
-			lib.exchangeSessionProc,
+			lib.prepareLocalProtectionProc,
+			lib.generateCIDBindingProc,
+			lib.signBytesWithDetachedSignatureProc,
+			lib.verifyBytesWithDetachedSignatureProc,
 			lib.protectionPlanProc,
+			lib.protectBytesWithTDFProc,
+			lib.accessBytesWithTDFProc,
+			lib.rewrapBytesWithTDFProc,
+			lib.setTDFAttributesProc,
+			lib.editTDFAttributesProc,
+			lib.protectBytesWithEnvelopeProc,
+			lib.accessBytesWithEnvelopeProc,
+			lib.rewrapBytesWithEnvelopeProc,
 			lib.policyResolveProc,
 			lib.keyAccessPlanProc,
 			lib.artifactRegisterProc,

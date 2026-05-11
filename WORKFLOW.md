@@ -18,12 +18,12 @@ tracker:
 polling:
   interval_ms: 30000
 workspace:
-  root: "D:/lattix/.symphony/workspaces/sdk-go-public"
+  root: "D:/lattix/.symphony/workspaces/sdk-go"
 hooks:
   timeout_ms: 120000
   after_create: |
     set -euo pipefail
-    git clone --recurse-submodules --branch "main" "https://github.com/LATTIX-IO/sdk-go-public.git" .
+    git clone --recurse-submodules --branch "main" "https://github.com/LATTIX-IO/sdk-go.git" .
   before_run: |
     set -euo pipefail
     if [ -d .git ] && [ -z "$(git status --porcelain)" ]; then
@@ -47,9 +47,9 @@ codex:
   stall_timeout_ms: 300000
   approval_policy: never
 symphony:
-  repo: "sdk-go-public"
-  path: "sdk-go-public"
-  remote: "https://github.com/LATTIX-IO/sdk-go-public.git"
+  repo: "sdk-go"
+  path: "sdk-go"
+  remote: "https://github.com/LATTIX-IO/sdk-go.git"
   default_branch: "main"
   linear_project_name: "Testing, Quality & Documentation"
   technologies:
@@ -57,9 +57,9 @@ symphony:
     - docs
 ---
 
-# Symphony Workflow — sdk-go-public
+# Symphony Workflow — sdk-go
 
-You are the coding agent for **sdk-go-public** (sdk-go-public) running under Symphony. Symphony has selected this Linear issue and created an isolated per-issue workspace for you. Treat the workspace as the only place where commands and file edits may run.
+You are the coding agent for **sdk-go** (sdk-go) running under Symphony. Symphony has selected this Linear issue and created an isolated per-issue workspace for you. Treat the workspace as the only place where commands and file edits may run.
 
 ## Issue context
 
@@ -73,7 +73,7 @@ Use the issue description, labels, blockers, linked assets, and repository conte
 ## Repository profile
 
 - Linear project: Testing, Quality & Documentation (289d946064d4)
-- Repository path: sdk-go-public
+- Repository path: sdk-go
 - Default branch: main
 - Detected technology profile: go, docs
 

@@ -16,8 +16,14 @@ The Go package is a thin typed wrapper over the native Rust library and currentl
 - `KeyAccessPlan(...)`
 - `ArtifactRegister(...)`
 - `Evidence(...)`
+- `PrepareLocalProtection(...)`
+- `GenerateCIDBinding(...)`
 
-These map directly to the `lattix-platform-api` SDK endpoints and intentionally operate on **metadata**, not plaintext payloads.
+The low-level control-plane calls map directly to the `lattix-platform-api` SDK endpoints and intentionally operate on **metadata**, not plaintext payloads. The local helper methods layer on top of those calls while keeping plaintext in-process.
+
+`Capabilities()` and `Bootstrap()` both expose the live `AuthConfiguration` contract published by `lattix-platform-api`, including the direct bearer/OIDC mode, proof-of-possession setting, issuer/audience, and readiness flags.
+
+`GenerateCIDBinding(...)` is the lightest-weight local helper: it computes the in-process SHA-256 digest/raw CID, drives `bootstrap` → `policy_resolve` → `protection_plan`, and returns a portable `LocalArtifactBinding` that captures tenant/workload/resource linkage plus the resolved binding targets and binding hash.
 
 ## Build and installation
 
@@ -98,8 +104,48 @@ func main() {
 	}
 
 	fmt.Println(bootstrap.EnforcementModel)
+
+	binding, err := client.GenerateCIDBinding([]byte("hello world"), sdk.LocalProtectionRequest{
+		Workload: sdk.WorkloadDescriptor{Application: "example-app"},
+		Resource: sdk.ResourceDescriptor{Kind: "document"},
+		PreferredArtifactProfile: sdk.ArtifactProfileEnvelope,
+		Purpose: "store",
+		Labels: []string{"confidential"},
+		Attributes: map[string]string{"region": "us"},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(binding.RawCID)
+	fmt.Println(binding.BindingHash)
 }
 ```
+
+`GenerateCIDBinding(...)` is the right entry point when you want to persist or inspect the deterministic CID/policy binding before moving on to envelope or TDF protection.
+
+Managed symmetric-key providers are configured through `Options.ManagedSymmetricKeyProviders` and support both in-memory fixtures and command-backed provider adapters. The Rust core already owns the actual provider execution; the Go layer just ships typed config.
+
+```go
+client, err := sdk.NewClient(sdk.Options{
+	BaseURL: "https://api.lattix.io",
+	ManagedSymmetricKeyProviders: []sdk.ManagedSymmetricKeyProviderConfig{
+		sdk.NewCommandManagedKeyProviderConfig(
+			"command-kms",
+			"provider.exe",
+			[]string{"--stdio"},
+			map[string]string{"LATTIX_PROFILE": "dev"},
+			sdk.KeyTransportModeWrappedKeyReference,
+		),
+	},
+})
+if err != nil {
+	panic(err)
+}
+defer client.Close()
+```
+
+Use the command-backed form when key resolution must stay inside an external KMS helper process rather than being embedded directly into the application.
 
 ## Design notes
 
@@ -116,6 +162,21 @@ Default unit tests use a fake binding, so they run without native linkage:
 go test ./...
 ```
 
+The shared integration-full contract tests read the canonical scenario from
+`prop-system-tests/fixtures/sdk_api_e2e/integration_full_manifest.json`. In the
+monorepo they resolve that path automatically; in standalone CI or local clones,
+set `SDK_API_E2E_INTEGRATION_FULL_MANIFEST_PATH` to point at a checked-out
+`prop-system-tests` fixture tree.
+
+To run the optional composed-environment smoke against a real target, provide
+the composed endpoint env and execute the dedicated test:
+
+```bash
+SDK_API_E2E_INTEGRATION_FULL_BASE_URL=https://api.example \
+SDK_API_E2E_INTEGRATION_FULL_MANIFEST_PATH=/path/to/prop-system-tests/fixtures/sdk_api_e2e/integration_full_manifest.json \
+go test ./... -run TestRunIntegrationFullScenarioAgainstComposedEnvironment -count=1 -v
+```
+
 To validate the real native path, install or build the matching Rust library and then run:
 
 ```bash
@@ -124,7 +185,7 @@ go test ./... -tags rustbindings
 
 On Windows this validates the native DLL bridge instead of cgo, which avoids requiring `gcc` just to exercise the Rust SDK. Fancy that: fewer compilers, same binding.
 
-The tagged test suite also includes a small native smoke test that creates a real Rust-backed client and calls a local in-memory HTTP server through the binding.
+The tagged test suite also includes small native smoke tests that create a real Rust-backed client and call a local in-memory HTTP server through the binding, including CID-binding coverage for the local helper layer.
 
 ## Local quality gate
 
