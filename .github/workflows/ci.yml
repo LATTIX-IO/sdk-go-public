@@ -36,18 +36,10 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     env:
-      SDK_API_E2E_INTEGRATION_FULL_MANIFEST_PATH: ${{ github.workspace }}/prop-system-tests/fixtures/sdk_api_e2e/integration_full_manifest.json
+      SDK_API_E2E_INTEGRATION_FULL_MANIFEST_PATH: ${{ github.workspace }}/testdata/integration_full_manifest.json
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Checkout shared integration fixtures
-        uses: actions/checkout@v4
-        with:
-          repository: LATTIX-IO/prop-system-tests
-          ref: feat/sdk-api-e2e-shared-fixture-20260510
-          path: prop-system-tests
-          token: ${{ secrets.GH_PAT }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -77,7 +69,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.run_integration_full_composed
     runs-on: ubuntu-latest
     env:
-      SDK_API_E2E_INTEGRATION_FULL_MANIFEST_PATH: ${{ github.workspace }}/prop-system-tests/fixtures/sdk_api_e2e/integration_full_manifest.json
+      SDK_API_E2E_INTEGRATION_FULL_MANIFEST_PATH: ${{ github.workspace }}/testdata/integration_full_manifest.json
       SDK_API_E2E_INTEGRATION_FULL_BASE_URL: ${{ inputs.integration_full_base_url }}
       SDK_API_E2E_INTEGRATION_FULL_BEARER_TOKEN: ${{ secrets[inputs.integration_full_bearer_token_secret_name] }}
       SDK_API_E2E_INTEGRATION_FULL_TENANT_ID: ${{ inputs.integration_full_tenant_id }}
@@ -86,14 +78,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Checkout shared integration fixtures
-        uses: actions/checkout@v4
-        with:
-          repository: LATTIX-IO/prop-system-tests
-          ref: feat/sdk-api-e2e-shared-fixture-20260510
-          path: prop-system-tests
-          token: ${{ secrets.GH_PAT }}
 
       - name: Checkout sdk-rust source repository
         uses: actions/checkout@v4
