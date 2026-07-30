@@ -717,6 +717,7 @@ func integrationFullManifestPath(t *testing.T) string {
 	}
 
 	candidates := []string{
+		filepath.Join("testdata", "integration_full_manifest.json"),
 		filepath.Join("..", "prop-system-tests", "fixtures", "sdk_api_e2e", "integration_full_manifest.json"),
 		filepath.Join("prop-system-tests", "fixtures", "sdk_api_e2e", "integration_full_manifest.json"),
 	}
